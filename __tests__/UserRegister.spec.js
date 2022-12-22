@@ -131,15 +131,56 @@ describe('User Registration', () => {
   });
 
   it(`Returns errors for both username and ${email_in_use} `, async () => {
-    const validUser = {
+    const invalidUser = {
       username: null,
       email: 'user1@mail.com',
       password: 'p4ssWord',
     };
-    await User.create({ ...validUser });
-    const response = await postUser(validUser);
+    await User.create({ ...invalidUser });
+    const response = await postUser(invalidUser);
     const body = response.body;
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
+  });
+
+  it('Creates a user in inactive mode', async () => {
+    const validUser = {
+      username: 'user1',
+      email: 'user1@mail.com',
+      password: 'p4ssWord',
+    };
+    await postUser(validUser);
+
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+
+  it('Creates a user in inactive mode even the request body contains inactive as false', async () => {
+    const validUser = {
+      username: 'user1',
+      email: 'user1@mail.com',
+      password: 'p4ssWord',
+    };
+    const newUser = { ...validUser, inactive: false };
+    await postUser(newUser);
+
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.inactive).toBe(true);
+  });
+
+  it('Creates a user in inactive mode even the request body contains inactive as false', async () => {
+    const validUser = {
+      username: 'user1',
+      email: 'user1@mail.com',
+      password: 'p4ssWord',
+    };
+
+    await postUser(validUser);
+
+    const users = await User.findAll();
+    const savedUser = users[0];
+    expect(savedUser.activationToken).toBeTruthy();
   });
 });
 
